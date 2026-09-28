@@ -157,6 +157,24 @@ def clear_proxy_env():
         os.environ.pop(k, None)
 
 
+def force_utf8_stdio():
+    """把 stdout/stderr 切到 UTF-8。
+
+    本工具全程输出中文。Windows 上 Python 默认用 ANSI 代码页编码 stdout：
+    中文系统的 GBK 恰好能编中文，所以本地不报错；**英文系统是 cp1252**，
+    一打印中文就 `UnicodeEncodeError: 'charmap' codec can't encode ...` 崩掉。
+    CI 的 windows-latest 正是这种情况。
+
+    自带脚本建议开头调一次；库使用者从 `ntg.config` 导入即可。
+    """
+    import sys
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except Exception:  # noqa: BLE001 — 旧版本或被重定向的流不支持就算了
+            pass
+
+
 def setup_env(cfg):
     """按配置调整进程环境（代理、HF 镜像、CUDA 可见性）。"""
     if cfg["network"].get("clear_proxy"):

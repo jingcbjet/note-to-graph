@@ -173,6 +173,7 @@ def cmd_check(args):
 
 # ---------------------------------------------------------------- CLI
 def main(argv=None):
+    cfgmod.force_utf8_stdio()
     ap = argparse.ArgumentParser(
         prog="ntg", description="把课程笔记/讲义变成知识图谱与双链复习库")
     ap.add_argument("--config", help="配置文件路径 (ntg.yaml)")

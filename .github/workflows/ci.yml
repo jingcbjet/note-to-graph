@@ -10,6 +10,11 @@ jobs:
   test:
     name: 离线自检 (Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
+    env:
+      # 中文输出在 Windows runner（cp1252）会 UnicodeEncodeError。
+      # 代码里已调 force_utf8_stdio()，这里再兜一层。
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
     strategy:
       fail-fast: false
       matrix:

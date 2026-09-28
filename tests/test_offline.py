@@ -15,6 +15,10 @@ from ntg import config, graph as graphmod, loaders, splitter  # noqa: E402
 from ntg.embed import build_edges  # noqa: E402
 from ntg.obsidian import ObsidianBuilder  # noqa: E402
 
+# 本文件全程 print 中文。Windows 英文系统默认 cp1252 编码 stdout，
+# 不切 UTF-8 会 UnicodeEncodeError（CI windows-latest 就踩过）。
+config.force_utf8_stdio()
+
 PASS, FAIL = [], []
 
 
@@ -95,6 +99,7 @@ def main():
         print("\n[1] 配置层")
         cfg = config.load_config()
         check("默认配置可加载", cfg["graph"]["top_k"] == 3)
+        check("force_utf8_stdio 可调用", callable(config.force_utf8_stdio))
         cfg2 = config.load_config(overrides={"graph": {"top_k": 9}})
         check("overrides 生效", cfg2["graph"]["top_k"] == 9)
         check("嵌套默认值未被覆盖", cfg2["graph"]["min_sim"] == 0.60)
