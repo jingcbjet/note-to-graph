@@ -30,6 +30,13 @@
 - **断链自检**：生成 Obsidian 库后自动检查双链目标是否存在。
 - **多供应商支持**：siliconflow / deepseek / openai / ollama / 任意 OpenAI 兼容端点。
 
+### 修复
+
+- **Windows 英文系统打印中文崩溃**。Python 用 ANSI 代码页编码 stdout，中文系统的
+  GBK 恰好能编中文所以**本地测不出来**，英文系统的 cp1252 一打印中文就
+  `UnicodeEncodeError`。新版本统一在入口调 `force_utf8_stdio()`。
+- **CI 依赖装不齐**。`requests` 是模块级导入，漏装会让 `import ntg` 直接失败。
+
 ### 已知限制
 
 - 概念去重靠标签精确匹配，模型把同一概念写成不同表述时会重复计为两个节点。
