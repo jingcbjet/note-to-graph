@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: 离线自检 (Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.9", "3.11", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      # 只装纯 CPU 的轻量依赖。自检用的是 FakeEmbedder，
+      # 不需要 torch / sentence-transformers，装它们会让 CI 慢几分钟。
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyyaml numpy
+
+      - name: 语法检查
+        run: python -m compileall -q ntg tests
+
+      - name: 运行自检
+        run: python tests/test_offline.py
+
+      - name: 校验 CLI 可加载
+        run: python -m ntg.cli --help

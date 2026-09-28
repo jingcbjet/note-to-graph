@@ -1,5 +1,11 @@
 # note-to-graph
 
+[![CI](https://github.com/jingcbjet/note-to-graph/actions/workflows/ci.yml/badge.svg)](https://github.com/jingcbjet/note-to-graph/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](pyproject.toml)
+
+[English](README_EN.md) | 中文
+
 把课程笔记、讲义、网课文字稿变成**可交互知识图谱**和**Obsidian 双链复习库**。
 
 输入一堆 markdown 或一个课程页 HTML，输出一张能点开探索的概念网络图，外加一套
