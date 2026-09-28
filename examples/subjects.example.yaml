@@ -1,0 +1,22 @@
+# 多科目合集清单示例。复制为 subjects.yaml 后改 source 指向你的笔记目录。
+subjects:
+  - key: law
+    name: 法规与政策
+    subtitle: 2026 精讲班
+    domain: 社会工作职业水平考试
+    source: ./notes/law
+    color: "#3b5bdb"
+
+  - key: practice
+    name: 社会工作实务
+    subtitle: 2026 精讲班
+    domain: 社会工作职业水平考试
+    source: ./notes/practice
+    color: "#0f8a5f"
+
+  - key: ability
+    name: 综合能力
+    subtitle: 2026 精讲班
+    domain: 社会工作职业水平考试
+    source: ./notes/ability
+    color: "#c2571a"

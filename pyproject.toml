@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "note-to-graph"
+version = "0.1.0"
+description = "把课程笔记/讲义变成可交互知识图谱与 Obsidian 双链复习库"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "jingcbjet" }]
+keywords = ["knowledge-graph", "obsidian", "note-taking", "llm", "embedding", "education"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Education",
+    "Intended Audience :: Education",
+]
+
+dependencies = [
+    "requests>=2.28",
+    "numpy>=1.24",
+    "pyyaml>=6.0",
+    "sentence-transformers>=2.2",
+]
+
+[project.optional-dependencies]
+gpu = ["torch>=2.0"]
+
+[project.urls]
+Homepage = "https://github.com/jingcbjet/note-to-graph"
+Repository = "https://github.com/jingcbjet/note-to-graph"
+Issues = "https://github.com/jingcbjet/note-to-graph/issues"
+
+[project.scripts]
+ntg = "ntg.cli:main"
+
+[tool.setuptools]
+packages = ["ntg"]
+
+[tool.setuptools.package-data]
+ntg = ["template_graph.html"]

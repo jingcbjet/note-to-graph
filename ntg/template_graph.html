@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>__TITLE__</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: #f6f7fb;
+    color: #26313f;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  /* 科目 tab */
+  #subjectTabs { display: flex; padding: 10px 12px 0; gap: 6px; border-bottom: 1px solid #eef1f6; }
+  #subjectTabs:empty { display: none; }
+  .sub-tab {
+    flex: 1; text-align: center; padding: 8px 4px;
+    border-radius: 8px 8px 0 0; cursor: pointer;
+    font-size: 12.5px; color: #5b6b84; background: #f4f6fb;
+    border: 1px solid transparent; border-bottom: none; font-weight: 500;
+  }
+  .sub-tab:hover { background: #eceff8; }
+  .sub-tab.active { background: #fff; border-color: #e6e9f0; color: #1f2c3d; }
+  .sub-tab .cnt { display: block; font-size: 10.5px; color: #97a1b2; margin-top: 2px; font-weight: 400; }
+  /* 侧栏 */
+  #sidebar {
+    width: 340px;
+    background: #ffffff;
+    border-right: 1px solid #e6e9f0;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  #sidebar header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid #eef1f6;
+  }
+  #sidebar header h1 { font-size: 17px; margin-bottom: 4px; }
+  #sidebar header .sub { font-size: 12px; color: #8792a3; }
+  #stats {
+    padding: 10px 18px;
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid #eef1f6;
+  }
+  #stats .stat {
+    flex: 1;
+    background: #f4f6fb;
+    border-radius: 8px;
+    padding: 8px 6px;
+    text-align: center;
+  }
+  #stats .stat b { display: block; font-size: 16px; color: #3b5bdb; }
+  #stats .stat span { font-size: 11px; color: #8792a3; }
+  #lectureList {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+  .lec-item {
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background .15s;
+  }
+  .lec-item:hover { background: #f0f3fa; }
+  .lec-item.active { background: #e7ecfd; }
+  .lec-item .num {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: #3b5bdb;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: bold;
+    flex-shrink: 0;
+  }
+  .lec-item.pending .num { background: #c3cad6; }
+  .lec-item .info { flex: 1; min-width: 0; }
+  .lec-item .info .t {
+    font-size: 12.5px; line-height: 1.35;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .lec-item .info .meta { font-size: 11px; color: #97a1b2; margin-top: 2px; }
+  .lec-item.pending .info .t { color: #b3bcci; }
+  #sidebar footer {
+    padding: 10px 16px;
+    border-top: 1px solid #eef1f6;
+    font-size: 11px;
+    color: #97a1b2;
+    line-height: 1.5;
+  }
+  /* 主图区 */
+  #main { flex: 1; position: relative; }
+  #chart { width: 100%; height: 100%; }
+  #detail {
+    position: absolute;
+    right: 18px; top: 18px;
+    width: 330px;
+    max-height: calc(100% - 40px);
+    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid #e6e9f0;
+    border-radius: 12px;
+    box-shadow: 0 8px 28px rgba(35,55,95,.12);
+    padding: 16px;
+    display: none;
+  }
+  #detail h3 { font-size: 15px; margin-bottom: 8px; padding-right: 24px; }
+  #detail .close {
+    position: absolute; right: 12px; top: 12px;
+    width: 24px; height: 24px;
+    border: none; background: #f0f2f8;
+    border-radius: 6px; cursor: pointer;
+    font-size: 13px; color: #667;
+  }
+  #detail .chap { font-size: 11.5px; color: #5b6bwp; }
+  #detail .chap { font-size: 11.5px; color: #5b6b84; margin-bottom: 10px; }
+  #detail .content {
+    font-size: 13px; line-height: 1.75;
+    color: #39434f;
+    white-space: pre-wrap;
+    background: #f8f9fc;
+    border-radius: 8px;
+    padding: 12px;
+  }
+  #detail .imp {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+  }
+  .imp.critical { background: #fde8e8; color: #d64545; }
+  .imp.important { background: #fff4dd; color: #c78a1a; }
+  #legend {
+    position: absolute;
+    left: 18px; bottom: 16px;
+    background: rgba(255,255,255,.92);
+    border: 1px solid #e6e9f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 11.5px;
+    color: #5b6b84;
+    line-height: 1.9;
+    box-shadow: 0 4px 16px rgba(35,55,95,.08);
+  }
+  #legend .dot {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; margin-right: 6px; vertical-align: middle;
+  }
+  #progress {
+    position: absolute;
+    left: 18px; top: 16px;
+    background: rgba(255,255,255,.92);
+    border: 1px solid #e6e9f0;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: #5b6b84;
+    box-shadow: 0 4px 16px rgba(35,55,95,.08);
+  }
+  #progress b { color: #3b5bdb; }
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <header>
+    <h1 id="hdTitle">__TITLE__</h1>
+    <div class="sub" id="hdSub">__SUBTITLE__</div>
+  </header>
+  <div id="stats">
+    <div class="stat"><b id="stNodes">-</b><span>概念节点</span></div>
+    <div class="stat"><b id="stEdges">-</b><span>关联边</span></div>
+    <div class="stat"><b id="stLecs">-</b><span>已图谱讲</span></div>
+  </div>
+  <div id="subjectTabs"></div>
+  <div id="lectureList"></div>
+  <footer>
+    note-to-graph · <span id="ftModel">__MODEL__</span><br>
+    点击左侧讲次筛选 · 点击节点看详情
+  </footer>
+</div>
+<div id="main">
+  <div id="chart"></div>
+  <div id="progress">图谱生成中… <b id="pgText"></b></div>
+  <div id="legend">
+    <div><span class="dot" style="background:#d64545"></span>critical 核心考点</div>
+    <div><span class="dot" style="background:#e8a33d"></span>important 重要</div>
+    <div><span class="dot" style="background:#7c93c4"></span>general 一般概念</div>
+    <div><span class="dot" style="background:#c3cad6"></span>未生成讲次</div>
+  </div>
+  <div id="detail">
+    <button class="close" onclick="hideDetail()">✕</button>
+    <h3 id="dTitle"></h3>
+    <div id="dImp"></div>
+    <div class="chap" id="dChap"></div>
+    <div class="content" id="dContent"></div>
+  </div>
+</div>
+<script>
+const GRAPH = __GRAPH_DATA__;
+
+// 讲次总数：有 subjects 字段按科目取，单科目时用节点里最大讲号
+const SUBJECTS = GRAPH.subjects || null;
+const ALL = __LECTURE_COUNT__;
+
+const lectureDone = {};
+GRAPH.nodes.forEach(n => {
+  if (!lectureDone[n.lecture]) lectureDone[n.lecture] = {count: 0, title: n.lectureTitle};
+  lectureDone[n.lecture].count++;
+});
+
+const lectureTitles = {};
+GRAPH.nodes.forEach(n => lectureTitles[n.lecture] = n.lectureTitle);
+
+const listEl = document.getElementById('lectureList');
+function localLecture(g) { return SUBJECTS ? g % 1000 : g; }
+
+// ---------- 单科目 ----------
+function renderSingle() {
+  for (let i = 1; i <= ALL; i++) {
+    const done = lectureDone[i];
+    const div = document.createElement('div');
+    div.className = 'lec-item' + (done ? '' : ' pending');
+    div.dataset.lecture = i;
+    div.innerHTML = `<div class="num">${String(i).padStart(2,'0')}</div>
+      <div class="info">
+        <div class="t">${done ? lectureTitles[i] : '（无内容）'}</div>
+        <div class="meta">${done ? done.count + ' 个概念节点' : 'pending'}</div>
+      </div>`;
+    div.onclick = () => selectLecture(i);
+    listEl.appendChild(div);
+  }
+  document.getElementById('stNodes').textContent = GRAPH.nodes.length;
+  document.getElementById('stEdges').textContent = GRAPH.edges.length;
+  document.getElementById('stLecs').textContent = Object.keys(lectureDone).length + '/' + ALL;
+}
+
+// ---------- 多科目（合集） ----------
+let curSubject = null;
+const SUB_COLORS = {};
+function renderTabs() {
+  const tabsEl = document.getElementById('subjectTabs');
+  if (!tabsEl) return;
+  tabsEl.innerHTML = '';
+  SUBJECTS.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'sub-tab' + (s.key === curSubject.key ? ' active' : '');
+    div.innerHTML = s.name + '<span class="cnt">' + s.nodeCount + ' 节点</span>';
+    div.onclick = () => { curSubject = s; renderTabs(); renderLectureList(); render(null); updateHead(); };
+    tabsEl.appendChild(div);
+  });
+}
+function updateHead() {
+  document.getElementById('hdSub').textContent = curSubject.name + ' · ' + curSubject.subtitle;
+  document.getElementById('stNodes').textContent = curSubject.nodeCount;
+  document.getElementById('stEdges').textContent = curSubject.edgeCount;
+  document.getElementById('stLecs').textContent = curSubject.lectures.length;
+}
+function renderLectureList() {
+  listEl.innerHTML = '';
+  curSubject.lectures.forEach(g => {
+    const i = localLecture(g);
+    const div = document.createElement('div');
+    div.className = 'lec-item';
+    div.dataset.lecture = g;
+    div.innerHTML = `<div class="num" style="background:${curSubject.color}">${String(i).padStart(2,'0')}</div>
+      <div class="info">
+        <div class="t">${lectureTitles[g] || '第' + i + '讲'}</div>
+        <div class="meta">${lectureCount[g]} 个概念节点</div>
+      </div>`;
+    div.onclick = () => selectLecture(g);
+    listEl.appendChild(div);
+  });
+}
+const lectureCount = {};
+GRAPH.nodes.forEach(n => lectureCount[n.lecture] = (lectureCount[n.lecture] || 0) + 1);
+
+if (SUBJECTS) {
+  SUBJECTS.forEach(s => SUB_COLORS[s.key] = s.color);
+  curSubject = SUBJECTS[0];
+  renderTabs(); renderLectureList(); updateHead();
+} else {
+  renderSingle();
+  document.getElementById('stNodes').textContent = GRAPH.nodes.length;
+  document.getElementById('pgText').textContent = GRAPH.nodes.length + ' 节点';
+}
+
+function impColor(imp) {
+  if (imp === 'critical') return '#d64545';
+  if (imp === 'important') return '#e8a33d';
+  return '#7c93c4';
+}
+function impSize(w) {
+  return Math.max(7, Math.min(26, 6 + (w || 1) * 0.9));
+}
+
+const chart = echarts.init(document.getElementById('chart'));
+let currentFilter = null;
+
+function buildGraph(filter) {
+  let nodes = SUBJECTS ? GRAPH.nodes.filter(n => n.subject === curSubject.key)
+                       : GRAPH.nodes;
+  if (filter) nodes = nodes.filter(n => n.lecture === filter);
+  const ids = new Set(nodes.map(n => n.id));
+  const edges = GRAPH.edges.filter(e => ids.has(e.source) && ids.has(e.target));
+  return {
+    nodes: nodes.map(n => ({
+      id: String(n.id),
+      name: n.label,
+      symbolSize: impSize(n.weight),
+      itemStyle: {color: impColor(n.importance)},
+      data: n,
+      label: {show: nodes.length <= 90 || n.weight > 8}
+    })),
+    edges: edges.map(e => ({
+      source: String(e.source),
+      target: String(e.target),
+      lineStyle: {
+        width: Math.max(0.6, Math.min(3, (e.weight || 1) * 0.35)),
+        color: '#b9c4dd',
+        curveness: 0.18,
+        opacity: 0.65
+      }
+    }))
+  };
+}
+
+function render(filter) {
+  currentFilter = filter;
+  const data = buildGraph(filter);
+  chart.setOption({
+    tooltip: {
+      formatter: p => {
+        if (p.dataType !== 'node') return '';
+        const d = p.data.data;
+        return `<b>${d.label}</b><br><span style="color:#8792a3;font-size:11px">第${String(d.lecture).padStart(2,'0')}讲 · ${d.importance || 'general'} · 权重 ${d.weight}</span>`;
+      },
+      confine: true
+    },
+    series: [{
+      type: 'graph',
+      layout: 'force',
+      roam: true,
+      draggable: true,
+      force: {repulsion: 160, edgeLength: [40, 110], gravity: 0.09, friction: 0.25},
+      data: data.nodes,
+      links: data.edges,
+      label: {
+        position: 'right',
+        distance: 5,
+        fontSize: 11,
+        color: '#44536a',
+        formatter: p => p.data.name
+      },
+      emphasis: {
+        focus: 'adjacency',
+        lineStyle: {width: 2.5, color: '#3b5bdb'},
+        label: {fontSize: 12, fontWeight: 'bold'}
+      },
+      scaleLimit: {min: 0.4, max: 4}
+    }]
+  }, true);
+}
+
+chart.on('click', p => {
+  if (p.dataType === 'node') showDetail(p.data.data);
+});
+
+function showDetail(n) {
+  document.getElementById('dTitle').textContent = n.label;
+  const impEl = document.getElementById('dImp');
+  const impLabel = (n.importance === 5 || n.importance === 'critical') ? '核心考点' :
+                   (n.importance === 4 ? '重要' : (n.importance <= 2 ? '一般' : n.importance));
+  impEl.innerHTML = n.importance
+    ? `<span class="imp" style="background:#f4f6fb;color:${impColor(n.importance)};border:1px solid ${impColor(n.importance)}33">${impLabel}</span>`
+    : '';
+  const sub = n.subjectName ? n.subjectName + ' · ' : '';
+  document.getElementById('dChap').textContent =
+    `${sub}第${String(localLecture(n.lecture)).padStart(2,'0')}讲 · ${n.lectureTitle}`;
+  document.getElementById('dContent').textContent = n.content || '（无内容）';
+  document.getElementById('detail').style.display = 'block';
+}
+function hideDetail() {
+  document.getElementById('detail').style.display = 'none';
+}
+
+function selectLecture(i) {
+  document.querySelectorAll('.lec-item').forEach(el => {
+    el.classList.toggle('active', +el.dataset.lecture === i);
+  });
+  render(i);
+}
+
+render(null);
+window.addEventListener('resize', () => chart.resize());
+</script>
+</body>
+</html>

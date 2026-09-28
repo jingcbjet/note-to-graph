@@ -1,0 +1,56 @@
+# note-to-graph 配置示例
+# 复制为 ntg.yaml 后按需修改。所有项都有默认值，可以只填要改的。
+
+llm:
+  # 预设：siliconflow / deepseek / openai / ollama / openai-compatible
+  provider: siliconflow
+  # provider 为 openai-compatible 时必须手填
+  base_url: ""
+  model: ""
+  # 留空则读环境变量 NTG_API_KEY（推荐，别把 key 写进文件）
+  api_key: ""
+  max_tokens: 16000
+  temperature: 0.2
+  # 并发数。4 路实测稳定；调高容易触发限速
+  concurrency: 4
+  timeout: 300
+
+embed:
+  model: BAAI/bge-large-zh-v1.5
+  # cuda / cpu / mps；没有 GPU 就写 cpu（慢一些但能用）
+  device: cuda
+  batch_size: 64
+
+graph:
+  # 每个节点最多保留几条边。不限制的话边会爆炸（8+ 边/节点，图糊成一团）
+  top_k: 3
+  # 科内余弦相似度门槛（自适应模式下的基准值）
+  min_sim: 0.60
+  # 自适应门槛：bge 的相似度分布在不同讲次间差异极大（同一批语料里
+  # 有的讲中位数 0.49、有的 0.69），固定门槛会让某些讲糊成团、另一些太稀疏。
+  # 开启后按每讲的分布取分位数，让密度趋于一致。建议保持 true。
+  adaptive_sim: true
+  # 目标边密度，0 = 自动（top_k*0.7，夹在 1.4~2.2 的健康区间）
+  target_density: 0
+  # 跨科门槛要更高 —— 科内连错只是噪声，跨科连错会让人建立错误类比
+  cross_min_sim: 0.82
+  cross_top_k: 3
+
+split:
+  min_merge: 120
+  max_cap: 900
+  # 单讲产出少于这个数视为失败并重试
+  min_nodes: 8
+
+output:
+  workdir: ./output
+  html_title: 知识图谱
+  # 填了才会生成 Obsidian 笔记库，例如：E:\文件\obsidian\备考
+  obsidian_vault: ""
+  obsidian_subdir: 知识图谱
+
+network:
+  # 调用 LLM 前清掉代理环境变量。CI/沙箱常注入假代理导致国内 API 连不上
+  clear_proxy: true
+  # 国内下载 embedding 模型慢的话填 https://hf-mirror.com
+  hf_endpoint: ""

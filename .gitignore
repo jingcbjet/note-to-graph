@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+
+# 本项目产出
+output/
+cache/
+*.sdpub
+graph_data*.json
+collection.html
+*.html.bak
+
+# 配置与密钥 —— 千万别提交
+ntg.yaml
+config.yaml
+.env
+.env.*
+!.env.example
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# 模型缓存
+.cache/
+huggingface/
