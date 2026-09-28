@@ -26,10 +26,12 @@ jobs:
 
       # 只装纯 CPU 的轻量依赖。自检用的是 FakeEmbedder，
       # 不需要 torch / sentence-transformers，装它们会让 CI 慢几分钟。
+      # 但 requests / pyyaml / numpy 是**模块级**导入的，必须装齐，
+      # 否则 `import ntg` 直接 ImportError（本地装了这些依赖，容易漏）。
       - name: 安装依赖
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pyyaml numpy
+          python -m pip install pyyaml numpy requests
 
       - name: 语法检查
         run: python -m compileall -q ntg tests
